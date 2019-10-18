@@ -1,0 +1,257 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Transform": "AWS::Serverless-2016-10-31",
+    "Description": "Deployment template for the simple content approval workflow example",
+
+    "Parameters": {
+        "CallbackUrlsFunctionArn": {
+            "Type": "String",
+            "Description": "Arn of the Lambda function used to generate approve/reject callback urls"
+        },
+        "UserEmail" : {
+            "Type" : "String",
+            "Description" : "User email for notifications"
+        },
+        "UnapprovedWords" : {
+            "Type": "String",
+            "Description": "Comma-separated list of words that, if found in content, will trigger automated rejection",
+            "Default": "naughty,unapproved,improper,nasty,your_favorite_cuss_words_here"
+        }
+    },
+
+    "Resources": {
+
+        "NotificationTopic": {
+            "Type": "AWS::SNS::Topic",
+            "Properties": {
+                "Subscription" : [
+                    {
+                        "Protocol" : "email",
+                        "Endpoint" : { "Ref": "UserEmail" }
+                    }
+                ]
+            }
+        },
+
+        "NotificationTopicArnParameter": {
+            "Type": "AWS::SSM::Parameter",
+            "Properties" : {
+                "Name" : { "Fn::Sub": "/${AWS::StackName}/EmailTopicArn" },
+                "Type" : "String",
+                "Value" : { "Ref": "NotificationTopic" }
+            }
+        },
+
+        "CallbackUrlsFunctionArnParameter": {
+            "Type": "AWS::SSM::Parameter",
+            "Properties" : {
+                "Name" : { "Fn::Sub": "/${AWS::StackName}/CallbackUrlsFunctionArn" },
+                "Type" : "String",
+                "Value" : { "Ref": "CallbackUrlsFunctionArn" }
+            }
+        },
+
+        "UnapprovedWordsParameter": {
+            "Type": "AWS::SSM::Parameter",
+            "Properties" : {
+                "Name" : { "Fn::Sub": "/${AWS::StackName}/UnapprovedWords" },
+                "Type" : "StringList",
+                "Value" : { "Ref": "UnapprovedWords" }
+            }
+        },
+
+        "WorkflowFunctionsRole": {
+            "Type": "AWS::IAM::Role",
+            "Description": "Role policies for Lambda functions to support the workflow",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "lambda.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "ManagedPolicyArns": [
+                    "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+                    "arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess"
+                ],
+                "Policies": [
+                    {
+                        "PolicyName": "ContentApprovalWorkflowPolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "lambda:InvokeFunction"
+                                    ],
+                                    "Resource": { "Ref": "CallbackUrlsFunctionArn" }
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "sns:Publish"
+                                    ],
+                                    "Resource": { "Ref": "NotificationTopic" }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+
+        "CheckForUnapprovedWordsFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Description" : "Inspects the proposed content to pre-validate it contains no unapproved words",
+            "Properties": {
+                "Handler": "CheckForUnapprovedWords::CheckForUnapprovedWords.Bootstrap::ExecuteFunction",
+                "Role": {
+                    "Fn::GetAtt": [
+                        "WorkflowFunctionsRole",
+                        "Arn"
+                    ]
+                },
+                "Environment": {
+                    "Variables": {
+                        "ParameterNameRoot": { "Fn::Sub" : "/${AWS::StackName}" }
+                    }
+                },
+                "Runtime": "dotnetcore2.1",
+                "MemorySize": 512,
+                "Timeout": 60,
+                "Code": {
+                    "S3Bucket": "",
+                    "S3Key": "./build/CheckForUnapprovedWords.zip"
+                }
+            }
+        },
+
+        "SendApprovalEmailFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Description" : "Generates and sends the approval email then waits to continue",
+            "Properties": {
+                "Handler": "SendApprovalEmail::SendApprovalEmail.Bootstrap::ExecuteFunction",
+                "Role": {
+                    "Fn::GetAtt": [
+                        "WorkflowFunctionsRole",
+                        "Arn"
+                    ]
+                },
+                "Environment": {
+                    "Variables": {
+                        "ParameterNameRoot": { "Fn::Sub" : "/${AWS::StackName}" }
+                    }
+                },
+                "Runtime": "dotnetcore2.1",
+                "MemorySize": 512,
+                "Timeout": 60,
+                "Code": {
+                    "S3Bucket": "",
+                    "S3Key": "./build/SendApprovalEmail.zip"
+                }
+            }
+        },
+
+        "SendConfirmationFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Description" : "Sends the appropriate approved/rejected notification email",
+            "Properties": {
+                "Handler": "SendConfirmation::SendConfirmation.Bootstrap::ExecuteFunction",
+                "Role": {
+                    "Fn::GetAtt": [
+                        "WorkflowFunctionsRole",
+                        "Arn"
+                    ]
+                },
+                "Environment": {
+                    "Variables": {
+                        "ParameterNameRoot": { "Fn::Sub" : "/${AWS::StackName}" }
+                    }
+                },
+                "Runtime": "dotnetcore2.1",
+                "MemorySize": 512,
+                "Timeout": 60,
+                "Code": {
+                    "S3Bucket": "",
+                    "S3Key": "./build/SendConfirmation.zip"
+                }
+            }
+        },
+
+        "StateMachineRole": {
+            "Type": "AWS::IAM::Role",
+            "Description" : "",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": {
+                                    "Fn::Sub": "states.${AWS::Region}.amazonaws.com"
+                                }
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "Policies": [
+                    {
+                        "PolicyName": "StepFunctionLambdaInvoke",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "lambda:InvokeFunction"
+                                    ],
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+
+        "StateMachine": {
+            "Type": "AWS::StepFunctions::StateMachine",
+            "Description" : "",
+            "Properties": {
+                "RoleArn": {
+                    "Fn::GetAtt": [
+                        "StateMachineRole",
+                        "Arn"
+                    ]
+                },
+                "DefinitionString": {
+                    "Fn::Sub": ""
+                }
+            }
+        }
+
+    },
+
+    "Outputs": {
+
+        "StateMachineArn": {
+            "Description" : "",
+            "Value": {
+                "Ref": "StateMachine"
+            }
+        }
+    }
+}

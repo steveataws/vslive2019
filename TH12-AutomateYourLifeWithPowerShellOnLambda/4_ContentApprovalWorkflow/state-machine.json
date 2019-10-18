@@ -1,0 +1,48 @@
+{
+    "Comment": "Simple content approval workflow state machine example",
+    "StartAt": "CheckForUnapprovedWords",
+    "States": {
+        "CheckForUnapprovedWords": {
+            "Type": "Task",
+            "Resource": "${CheckForUnapprovedWordsFunction.Arn}",
+            "Next": "SendApprovalRequest",
+            "Catch": [
+                {
+                    "ErrorEquals": [
+                        "unapprovedWords"
+                    ],
+                    "ResultPath": "$.errorInfo",
+                    "Next": "SendConfirmation"
+                }
+            ]
+        },
+        "SendApprovalRequest": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+            "Parameters": {
+                "FunctionName": "${SendApprovalEmailFunction.Arn}",
+                "Payload": {
+                    "name.$": "$.Name",
+                    "content.$": "$.Content",
+                    "token.$": "$$.Task.Token"
+                }
+            },
+            "ResultPath": "$.output",
+            "Next": "SendConfirmation",
+            "Catch": [
+                {
+                    "ErrorEquals": [
+                        "rejected"
+                    ],
+                    "ResultPath": "$.output",
+                    "Next": "SendConfirmation"
+                }
+            ]
+        },
+        "SendConfirmation": {
+            "Type": "Task",
+            "Resource": "${SendConfirmationFunction.Arn}",
+            "End": true
+        }
+    }
+}
