@@ -41,4 +41,9 @@ New-AWSPowerShellLambdaPackage -ScriptPath ./CheckForUnapprovedWords.ps1 -Output
 New-AWSPowerShellLambdaPackage -ScriptPath ./SendApprovalEmail.ps1 -OutputPackage ./build/SendApprovalEmail.zip
 New-AWSPowerShellLambdaPackage -ScriptPath ./SendConfirmation.ps1 -OutputPackage ./build/SendConfirmation.zip
 
-dotnet lambda deploy-serverless
+$templateParameters = "CallbackUrlsFunctionArn=$CallbackUrlsFunctionArn;UserEmail=$UserEmail"
+if ($UnapprovedWords) {
+    $templateParameters += ";UnapprovedWords=$UnapprovedWords"
+}
+
+dotnet lambda deploy-serverless --template-parameters $templateParameters

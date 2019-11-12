@@ -11,7 +11,7 @@
     "region": "us-west-2",
     "configuration": "Release",
     "framework": "netcoreapp2.1",
-    "s3-prefix": "vslive2019-sandiego/contentworkflow",
+    "s3-prefix": "vslive2019/contentworkflow",
     "template": "serverless.template",
     "template-parameters": "",
     "template-substitutions": "$.Resources.StateMachine.Properties.DefinitionString.Fn::Sub=state-machine.json",

@@ -25,9 +25,9 @@
 # Note: we're using the new preview release of the AWS Tools for PowerShell here.
 # The Lambda tooling doesn't currently follow the dependency chain so we have to be
 # explicit and add the common module.
-#Requires -Modules @{ModuleName='AWS.Tools.Common';ModuleVersion='3.3.563.1'}
-#Requires -Modules @{ModuleName='AWS.Tools.SimpleSystemsManagement';ModuleVersion='3.3.563.1'}
-#Requires -Modules @{ModuleName='AWS.Tools.SimpleNotificationService';ModuleVersion='3.3.563.1'}
+#Requires -Modules @{ModuleName='AWS.Tools.Common';ModuleVersion='3.3.618.0'}
+#Requires -Modules @{ModuleName='AWS.Tools.SimpleSystemsManagement';ModuleVersion='3.3.618.0'}
+#Requires -Modules @{ModuleName='AWS.Tools.SimpleNotificationService';ModuleVersion='3.3.618.0'}
 
 $parameterNameRoot = $env:ParameterNameRoot
 
