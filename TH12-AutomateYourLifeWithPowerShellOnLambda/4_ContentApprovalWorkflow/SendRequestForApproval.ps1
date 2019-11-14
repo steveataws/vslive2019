@@ -6,7 +6,7 @@
 # the AWS Serverless Application Repository.
 #
 # Input to this function:
-#   PSObject with 'Name' and 'Content' fields.
+#   PSObject with 'requester' and 'content' fields.
 #
 # Environment parameters to customize this function:
 #   none
@@ -41,6 +41,8 @@ $parameterNameRoot = $env:ParameterNameRoot
 $topicArn = (Get-SSMParameterValue -Name "$parameterNameRoot/EmailTopicArn").Parameters[0].Value
 $callbackUrlFunction = (Get-SSMParameterValue -Name "$parameterNameRoot/CallbackUrlsFunctionArn").Parameters[0].Value
 
+Write-Host "Received request to approve content '$($LambdaInput.content)' for user $($LambdaInput.requester)"
+
 $sfnCallbackUrlInput = @{
     # Step Functions gives us this callback token
     # sfn-callback-urls needs it to be able to complete the task
@@ -50,13 +52,13 @@ $sfnCallbackUrlInput = @{
         @{
             'name'='approve'
             'type'='success'
-            'output'="$($LambdaInput.Name) approved your request"
+            'output'="$($LambdaInput.requestor), your request was approved."
         },
         @{
             'name'='reject'
             'type'='failure'
             'error'='rejected'
-            'cause'="$($LambdaInput.Name) rejected it"
+            'cause'="$($LambdaInput.requester), please rework your content and and resubmit your request."
         }
     )
 }
@@ -71,13 +73,14 @@ $data = $StreamReader.ReadToEnd() | ConvertFrom-Json
 Write-Host "Received urls $($data.urls)"
 
 # Compose email
-$email_subject = 'Content workflow example approval request'
+$email_subject = 'Content workflow example approve/reject request'
 
 $email_body = @"
-    Hello $($LambdaInput.Name),
+    Hello content approver overlord!
 
-    Proposed content:
-        $($LambdaInput.Content)
+    $($LambdaInput.requester) has requested approval to post the following content:
+
+        $($LambdaInput.content)
 
     Click below to approve or reject the proposed content for publication:
 

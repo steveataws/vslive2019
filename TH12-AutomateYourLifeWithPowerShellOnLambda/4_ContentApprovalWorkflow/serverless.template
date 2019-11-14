@@ -6,11 +6,11 @@
     "Parameters": {
         "CallbackUrlsFunctionArn": {
             "Type": "String",
-            "Description": "Arn of the Lambda function used to generate approve/reject callback urls"
+            "Description": "Arn of the deployed sfn-callback-urls Lambda function, used to generate approve/reject urls into the email sent to the final approver."
         },
-        "UserEmail" : {
+        "ApproverEmail" : {
             "Type" : "String",
-            "Description" : "User email for notifications"
+            "Description" : "The email of the user who will make the final approve/reject decision."
         },
         "UnapprovedWords" : {
             "Type": "String",
@@ -27,7 +27,7 @@
                 "Subscription" : [
                     {
                         "Protocol" : "email",
-                        "Endpoint" : { "Ref": "UserEmail" }
+                        "Endpoint" : { "Ref": "ApproverEmail" }
                     }
                 ]
             }
@@ -137,11 +137,11 @@
             }
         },
 
-        "SendApprovalEmailFunction": {
+        "SendRequestForApprovalFunction": {
             "Type": "AWS::Lambda::Function",
-            "Description" : "Generates and sends the approval email then waits to continue",
+            "Description" : "Generates and sends the approval email, then waits to continue",
             "Properties": {
-                "Handler": "SendApprovalEmail::SendApprovalEmail.Bootstrap::ExecuteFunction",
+                "Handler": "SendRequestForApproval::SendRequestForApproval.Bootstrap::ExecuteFunction",
                 "Role": {
                     "Fn::GetAtt": [
                         "WorkflowFunctionsRole",
@@ -158,16 +158,16 @@
                 "Timeout": 60,
                 "Code": {
                     "S3Bucket": "",
-                    "S3Key": "./build/SendApprovalEmail.zip"
+                    "S3Key": "./build/SendRequestForApproval.zip"
                 }
             }
         },
 
-        "SendConfirmationFunction": {
+        "ReplyWithAnswerFunction": {
             "Type": "AWS::Lambda::Function",
             "Description" : "Sends the appropriate approved/rejected notification email",
             "Properties": {
-                "Handler": "SendConfirmation::SendConfirmation.Bootstrap::ExecuteFunction",
+                "Handler": "ReplyWithAnswer::ReplyWithAnswer.Bootstrap::ExecuteFunction",
                 "Role": {
                     "Fn::GetAtt": [
                         "WorkflowFunctionsRole",
@@ -184,7 +184,7 @@
                 "Timeout": 60,
                 "Code": {
                     "S3Bucket": "",
-                    "S3Key": "./build/SendConfirmation.zip"
+                    "S3Key": "./build/ReplyWithAnswer.zip"
                 }
             }
         },

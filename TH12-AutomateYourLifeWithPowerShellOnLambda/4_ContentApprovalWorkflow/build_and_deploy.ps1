@@ -9,8 +9,7 @@ tools package run the command 'dotnet tool install -g Amazon.Lambda.Tools' in
 a command shell.
 
 The script takes three parameters:
-- (mandatory) the user email to which content approved/rejected messages should be sent when
-  the workflow completes
+- (mandatory) the user email to which content approve/reject messages should be sent
 - (mandatory) the ARN of the deployed sfn-callback-urls function, which is used by the
   workflow to generate links to include an in email for final approval/rejection if
   the submitted content passes automated checks.
@@ -30,7 +29,7 @@ param (
     [string]$CallbackUrlsFunctionArn,
 
     [Parameter(Mandatory)]
-    [string]$UserEmail,
+    [string]$ApproverEmail,
 
     [Parameter]
     [string]$UnapprovedWords
@@ -38,10 +37,10 @@ param (
 )
 
 New-AWSPowerShellLambdaPackage -ScriptPath ./CheckForUnapprovedWords.ps1 -OutputPackage ./build/CheckForUnapprovedWords.zip
-New-AWSPowerShellLambdaPackage -ScriptPath ./SendApprovalEmail.ps1 -OutputPackage ./build/SendApprovalEmail.zip
-New-AWSPowerShellLambdaPackage -ScriptPath ./SendConfirmation.ps1 -OutputPackage ./build/SendConfirmation.zip
+New-AWSPowerShellLambdaPackage -ScriptPath ./SendRequestForApproval.ps1 -OutputPackage ./build/SendRequestForApproval.zip
+New-AWSPowerShellLambdaPackage -ScriptPath ./ReplyWithAnswer.ps1 -OutputPackage ./build/ReplyWithAnswer.zip
 
-$templateParameters = "CallbackUrlsFunctionArn=$CallbackUrlsFunctionArn;UserEmail=$UserEmail"
+$templateParameters = "CallbackUrlsFunctionArn=$CallbackUrlsFunctionArn;ApproverEmail=$ApproverEmail"
 if ($UnapprovedWords) {
     $templateParameters += ";UnapprovedWords=$UnapprovedWords"
 }

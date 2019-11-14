@@ -3,14 +3,15 @@
 # or reject links from the previous email.
 #
 # Input to this function:
-#   PSObject with 'Name' and 'Content' fields.
+#   PSObject with 'requester' and 'content' fields.
 #
 # Environment parameters to customize this function:
 #   none
 #
 # Parameter Store parameters used by this function:
 #   /ContentApprovalWorkflow/EmailTopicArn
-#       the SNS topic arn to which the confirmation will be sent
+#       the SNS topic arn to which the confirmation will be sent. We assume
+#       the requester is also subscribed to this topic to keep the demo simple!
 #
 #=============================================================================
 
@@ -37,15 +38,15 @@ $topicArn = (Get-SSMParameterValue -Name "$parameterNameRoot/EmailTopicArn").Par
 if ($LambdaInput.errorInfo) {
     # request was rejected by automated inspection, the Cause member is a json
     # payload
-    $cause = $LambdaInput.errorInfo.Cause | ConvertFrom-Json
+    $cause = $LambdaInput.errorInfo.cause | ConvertFrom-Json
 
     $email_subject = 'Automated content inspection failed'
     $email_body = @"
-    Hello,
+    Hello $($LambdaInput.requester),
 
     Your request to publish the content below:
 
-        $($LambdaInput.Content)
+        $($LambdaInput.content)
 
     was rejected because:
 
@@ -54,34 +55,32 @@ if ($LambdaInput.errorInfo) {
     Please edit your post and resubmit. Thank you!
 "@
 } elseif ($LambdaInput.output.Error) {
-    # a user clicked the rejection link
+    # the approver clicked the rejection link
     $email_subject = 'Content publish request rejected'
     $email_body = @"
-        Hello,
+        Hello $($LambdaInput.requester),
 
         Your request to publish the content below:
 
-            $($LambdaInput.Content)
+            $($LambdaInput.content)
 
-        was rejected because:
+        was rejected by the approver because:
 
-            $($LambdaInput.output)
+            $($LambdaInput.output.cause)
 
         Sorry!
 "@
 } else {
-    # a user clicked the approval link
+    # the approver clicked the approval link
     $email_subject = 'Content publish request approved'
     $email_body = @"
-        Hello,
+        Hello $($LambdaInput.requester),
 
         Your request to publish the content below:
 
-        $($LambdaInput.Content)
+        $($LambdaInput.content)
 
-        was approved because:
-
-        $($LambdaInput.output)
+        was approved.
 
         Yahoo!
 "@

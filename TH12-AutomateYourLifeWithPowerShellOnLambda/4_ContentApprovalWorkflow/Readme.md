@@ -9,15 +9,15 @@ For this sample to work you must first deploy the *sfn-callback-urls* applicatio
 To deploy the sample, run the .\build_and_deploy.ps1 script and provide the following parameters:
 
 - CallbackUrlsFunctionArn - the ARN of the callback function that you recorded after deploying the *sfn-callback-urls* app to your account
-- UserEmail - the email of the user who will receive the generated email asking them to approve/reject the submitted content
+- ApproverEmail - the email of the user who will receive the generated email asking them to approve/reject the submitted content
 - UnapprovedWords - (optional) - comma-separated list of words that if found in the content, will cause the request to be automatically rejected
 
 Once the sample is deployed, open the email of the user and confirm the SNS subscription. Then, go to the Step Functions console and execute the deployed state machine, passing the following payload (edit to suit!)
 
 ```json
 {
-  "Name": "Steve",
-  "Content": "This is an awesome demo, if it works!"
+  "requester": "Steve",
+  "content": "This is an awesome demo, if it works!"
 }
 ```
 

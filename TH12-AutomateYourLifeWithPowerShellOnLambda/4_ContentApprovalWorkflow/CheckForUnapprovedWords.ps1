@@ -4,7 +4,7 @@
 # rejected.
 #
 # Input to this function:
-#   PSObject with 'Name' and 'Content' fields.
+#   PSObject with 'requester' and 'content' fields.
 #
 # Environment parameters to customize this function:
 #   none
@@ -35,7 +35,7 @@ $parameterNameRoot = $env:ParameterNameRoot
 $unapprovedWordList = (Get-SSMParameterValue -Name "$parameterNameRoot/UnapprovedWords").Parameters[0].Value.Split(',')
 
 # not the most efficient but good enough for this demo!
-$contentWords = $LambdaInput.Content.Split(' ')
+$contentWords = $LambdaInput.content.Split(' ')
 foreach ($w in $contentWords) {
     if ($unapprovedWordList.Contains($w)) {
         throw @{

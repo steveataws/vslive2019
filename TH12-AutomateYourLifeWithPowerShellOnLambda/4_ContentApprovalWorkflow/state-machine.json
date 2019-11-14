@@ -5,43 +5,43 @@
         "CheckForUnapprovedWords": {
             "Type": "Task",
             "Resource": "${CheckForUnapprovedWordsFunction.Arn}",
-            "Next": "SendApprovalRequest",
+            "Next": "SendRequestForApproval",
             "Catch": [
                 {
                     "ErrorEquals": [
                         "unapprovedWords"
                     ],
                     "ResultPath": "$.errorInfo",
-                    "Next": "SendConfirmation"
+                    "Next": "ReplyWithAnswer"
                 }
             ]
         },
-        "SendApprovalRequest": {
+        "SendRequestForApproval": {
             "Type": "Task",
             "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
             "Parameters": {
-                "FunctionName": "${SendApprovalEmailFunction.Arn}",
+                "FunctionName": "${SendRequestForApprovalFunction.Arn}",
                 "Payload": {
-                    "name.$": "$.Name",
-                    "content.$": "$.Content",
+                    "requester.$": "$.requester",
+                    "content.$": "$.content",
                     "token.$": "$$.Task.Token"
                 }
             },
             "ResultPath": "$.output",
-            "Next": "SendConfirmation",
+            "Next": "ReplyWithAnswer",
             "Catch": [
                 {
                     "ErrorEquals": [
                         "rejected"
                     ],
                     "ResultPath": "$.output",
-                    "Next": "SendConfirmation"
+                    "Next": "ReplyWithAnswer"
                 }
             ]
         },
-        "SendConfirmation": {
+        "ReplyWithAnswer": {
             "Type": "Task",
-            "Resource": "${SendConfirmationFunction.Arn}",
+            "Resource": "${ReplyWithAnswerFunction.Arn}",
             "End": true
         }
     }
