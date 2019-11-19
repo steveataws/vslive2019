@@ -3,7 +3,7 @@
     "Transform": "AWS::Serverless-2016-10-31",
     "Description": "AWS Serverless API to redact text that might contain sensitive information.",
     "Resources": {
-        "RedationFunctionRole": {
+        "RedactionFunctionRole": {
             "Type": "AWS::IAM::Role",
             "Properties": {
                 "ManagedPolicyArns": [
@@ -40,7 +40,7 @@
                 "Timeout": 30,
                 "Role": {
                     "Fn::GetAtt": [
-                        "RedationFunctionRole",
+                        "RedactionFunctionRole",
                         "Arn"
                     ]
                 },

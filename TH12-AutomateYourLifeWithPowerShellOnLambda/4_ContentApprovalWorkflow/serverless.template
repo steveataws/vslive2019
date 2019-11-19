@@ -227,6 +227,54 @@
             }
         },
 
+        "RedactionFunctionRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "ManagedPolicyArns": [
+                    "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+                    "arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess",
+                    "arn:aws:iam::aws:policy/ComprehendReadOnly"
+                ],
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "lambda.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+
+        "RedactionFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Description" : "Redacts nouns and proper nouns from the content",
+            "Properties": {
+                "Handler": "Redactor::Redactor.Bootstrap::ExecuteFunction",
+                "Role": {
+                    "Fn::GetAtt": [
+                        "RedactionFunctionRole",
+                        "Arn"
+                    ]
+                },
+                "Runtime": "dotnetcore2.1",
+                "MemorySize": 512,
+                "Timeout": 30,
+                "Code": {
+                    "S3Bucket": "",
+                    "S3Key": "./build/Redactor.zip"
+                }
+            }
+        },
+
         "StateMachine": {
             "Type": "AWS::StepFunctions::StateMachine",
             "Description" : "",

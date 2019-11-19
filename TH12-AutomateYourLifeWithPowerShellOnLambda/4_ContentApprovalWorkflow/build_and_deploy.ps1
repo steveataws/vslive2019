@@ -39,6 +39,7 @@ param (
 New-AWSPowerShellLambdaPackage -ScriptPath ./CheckForUnapprovedWords.ps1 -OutputPackage ./build/CheckForUnapprovedWords.zip
 New-AWSPowerShellLambdaPackage -ScriptPath ./SendRequestForApproval.ps1 -OutputPackage ./build/SendRequestForApproval.zip
 New-AWSPowerShellLambdaPackage -ScriptPath ./ReplyWithAnswer.ps1 -OutputPackage ./build/ReplyWithAnswer.zip
+New-AWSPowerShellLambdaPackage -ScriptPath ./Redactor.ps1 -OutputPackage ./build/Redactor.zip
 
 $templateParameters = "CallbackUrlsFunctionArn=$CallbackUrlsFunctionArn;ApproverEmail=$ApproverEmail"
 if ($UnapprovedWords) {

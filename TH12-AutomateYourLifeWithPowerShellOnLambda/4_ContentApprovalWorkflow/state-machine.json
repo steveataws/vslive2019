@@ -5,7 +5,7 @@
         "CheckForUnapprovedWords": {
             "Type": "Task",
             "Resource": "${CheckForUnapprovedWordsFunction.Arn}",
-            "Next": "SendRequestForApproval",
+            "Next": "RunRedactor",
             "Catch": [
                 {
                     "ErrorEquals": [
@@ -15,6 +15,11 @@
                     "Next": "ReplyWithAnswer"
                 }
             ]
+        },
+        "RunRedactor": {
+            "Type": "Task",
+            "Resource": "${RedactionFunction.Arn}",
+            "Next": "SendRequestForApproval"
         },
         "SendRequestForApproval": {
             "Type": "Task",
