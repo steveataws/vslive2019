@@ -21,6 +21,6 @@ Once the sample is deployed, open the email of the user and confirm the SNS subs
 }
 ```
 
-You will see the state machine execute the automated approval check (which will cause rejection if any 'unapproved' words are found in the Content), then generate an email including accept/reject links which will be sent to the user. The state machine will pause execution at this point.
+You will see the state machine execute the automated approval check (which will cause rejection if any 'unapproved' words are found in the Content), check for content to redact, then generate an email including accept/reject links which will be sent to the user. The state machine will pause execution at this point.
 
-Once the appropriate link in the email is clicked the state machine workflow will resume and send the final approved/rejected message before concluding.
+Once the appropriate link in the email is clicked the state machine workflow will resume and send a confirmation receipt email to the approver of their approve/reject decision, or rejection due to automated checks, before concluding (it is assumed the requester is notified of the decision by either another yet-to-be-written Lambda function).

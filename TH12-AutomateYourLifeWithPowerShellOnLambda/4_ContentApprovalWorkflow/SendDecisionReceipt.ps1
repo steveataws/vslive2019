@@ -1,6 +1,8 @@
 #==============================================================================
-# Triggered when the workflow resumes after a user has clicked the approve
-# or reject links from the previous email.
+# Triggered when the workflow resumes after the approver has clicked the approve
+# or reject links from the previous email. Sends a confirmation email to the
+# approver of their actions. It is assumed a separate Lambda, or maybe even this
+# one, could be added to notify the requester of the decision.
 #
 # Input to this function:
 #   PSObject with 'requester' and 'content' fields.
@@ -42,9 +44,9 @@ if ($LambdaInput.errorInfo) {
 
     $email_subject = 'Automated content inspection failed'
     $email_body = @"
-    Hello $($LambdaInput.requester),
+    Hello,
 
-    Your request to publish the content below:
+    The request from $($LambdaInput.requester) to publish the content below:
 
         $($LambdaInput.content)
 
@@ -52,37 +54,34 @@ if ($LambdaInput.errorInfo) {
 
         $($cause.errorMessage)
 
-    Please edit your post and resubmit. Thank you!
+    Please advise the submitter to edit their post and resubmit. Thank you!
 "@
 } elseif ($LambdaInput.output.Error) {
     # the approver clicked the rejection link
     $email_subject = 'Content publish request rejected'
     $email_body = @"
-        Hello $($LambdaInput.requester),
+        Hello,
 
-        Your request to publish the content below:
+        You rejected the request from $($LambdaInput.requester) to publish the content below:
 
             $($LambdaInput.content)
 
-        was rejected by the approver because:
+        because:
 
             $($LambdaInput.output.cause)
 
-        Sorry!
+        Please advise the submitter to edit their post and resubmit. Thank you!
 "@
 } else {
     # the approver clicked the approval link
     $email_subject = 'Content publish request approved'
     $email_body = @"
-        Hello $($LambdaInput.requester),
+        Hello,
 
-        Your request to publish the content below:
+        You approved the request from $($LambdaInput.requester) to publish the content below:
 
         $($LambdaInput.content)
 
-        was approved.
-
-        Yahoo!
 "@
 }
 

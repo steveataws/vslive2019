@@ -163,11 +163,11 @@
             }
         },
 
-        "ReplyWithAnswerFunction": {
+        "SendDecisionReceiptFunction": {
             "Type": "AWS::Lambda::Function",
-            "Description" : "Sends the appropriate approved/rejected notification email",
+            "Description" : "Sends a confirmation email to the approver of either their approve/reject decision, or rejection by automated inspection.",
             "Properties": {
-                "Handler": "ReplyWithAnswer::ReplyWithAnswer.Bootstrap::ExecuteFunction",
+                "Handler": "SendDecisionReceipt::SendDecisionReceipt.Bootstrap::ExecuteFunction",
                 "Role": {
                     "Fn::GetAtt": [
                         "WorkflowFunctionsRole",
@@ -184,7 +184,7 @@
                 "Timeout": 60,
                 "Code": {
                     "S3Bucket": "",
-                    "S3Key": "./build/ReplyWithAnswer.zip"
+                    "S3Key": "./build/SendDecisionReceipt.zip"
                 }
             }
         },

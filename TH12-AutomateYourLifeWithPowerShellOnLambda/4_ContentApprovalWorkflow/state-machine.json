@@ -12,7 +12,7 @@
                         "unapprovedWords"
                     ],
                     "ResultPath": "$.errorInfo",
-                    "Next": "ReplyWithAnswer"
+                    "Next": "SendDecisionReceipt"
                 }
             ]
         },
@@ -33,20 +33,20 @@
                 }
             },
             "ResultPath": "$.output",
-            "Next": "ReplyWithAnswer",
+            "Next": "SendDecisionReceipt",
             "Catch": [
                 {
                     "ErrorEquals": [
                         "rejected"
                     ],
                     "ResultPath": "$.output",
-                    "Next": "ReplyWithAnswer"
+                    "Next": "SendDecisionReceipt"
                 }
             ]
         },
-        "ReplyWithAnswer": {
+        "SendDecisionReceipt": {
             "Type": "Task",
-            "Resource": "${ReplyWithAnswerFunction.Arn}",
+            "Resource": "${SendDecisionReceiptFunction.Arn}",
             "End": true
         }
     }
